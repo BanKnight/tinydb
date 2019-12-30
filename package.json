@@ -1,0 +1,24 @@
+{
+  "name": "@bansky/tinydb",
+  "version": "0.0.1",
+  "description": "json file database",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "json",
+    "file",
+    "mongodb",
+    "database",
+    "local"
+  ],
+  "author": "bansky",
+  "license": "MIT",
+  "dependencies": {
+    "extend2": "^1.0.0",
+    "fs-extra": "^8.1.0",
+    "shortid": "^2.2.15",
+    "sorted-array": "^2.0.4"
+  }
+}
