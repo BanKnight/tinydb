@@ -39,14 +39,14 @@ function make_key_filter(key, val)
     {
         for (let cmd of val)
         {
-            let filter = cmd_filters[cmd](key, val[cmd])
+            let filter = directives[cmd](key, val[cmd])
 
             filters.push(filter)
         }
     }
     else
     {
-        filter = make_equal_filter(key, val)
+        filter = directives["$="](key, val)
 
         filters.push(filter)
     }
@@ -54,7 +54,9 @@ function make_key_filter(key, val)
     return compose(filters)
 }
 
-function make_equal_filter(key, val)
+const directives = {}
+
+directives["$="] = (key, val) =>
 {
     return (data) =>
     {
@@ -62,9 +64,7 @@ function make_equal_filter(key, val)
     }
 }
 
-const cmd_filters = {}
-
-cmd_filters["$gt"] = function (key, val)
+directives["$gt"] = (key, val) =>
 {
     return (data) =>
     {
@@ -77,7 +77,7 @@ cmd_filters["$gt"] = function (key, val)
     }
 }
 
-cmd_filters["$lt"] = function (key, val)
+directives["$lt"] = (key, val) =>
 {
     return (data) =>
     {
@@ -90,7 +90,7 @@ cmd_filters["$lt"] = function (key, val)
     }
 }
 
-cmd_filters["$gte"] = function (key, val)
+directives["$gte"] = (key, val) =>
 {
     return (data) =>
     {
@@ -103,7 +103,7 @@ cmd_filters["$gte"] = function (key, val)
     }
 }
 
-cmd_filters["$lte"] = function (key, val)
+directives["$lte"] = (key, val) =>
 {
     return (data) =>
     {

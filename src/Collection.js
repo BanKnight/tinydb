@@ -4,9 +4,10 @@ const genid = require("shortid").generate
 
 const make_updator = require("./make_updator")
 const make_filter = require("./make_filter")
+const make_projection = require("./utils/make_projection")
+const make_sorter = require("./utils/make_sorter")
 
-const make_sorter = require("./make_sorter")
-const make_projection = require("./make_projection")
+const empty = {}
 
 module.exports = class Collection
 {
@@ -17,28 +18,10 @@ module.exports = class Collection
         this.path = path.join(this.db.root, this.name)
 
         this.meta = {}
-        this.data = {}
-        this.indexes = {
-            _id: {},
-        }
-        this.cmds = [this.load.bind(this)]
+        this.data = []
+        this.cmds = [this._load.bind(this)]
 
         this.doing = false
-    }
-
-    static cmp(first, second)
-    {
-        if (first._id < second._id)
-        {
-            return -1
-        }
-
-        if (first._id > second._id)
-        {
-            return 1
-        }
-
-        return 0
     }
 
     async find(cond, option)
@@ -47,13 +30,9 @@ module.exports = class Collection
         {
             this.cmds.push(async () =>
             {
-                let ret = this._filter(cond, option)
+                let cursor = this._query(cond, option)
 
-                let projection = make_projection(option.projection)
-
-                ret = ret.map(projection)
-
-                resolve(ret)
+                resolve(cursor)
             })
 
             this.do()
@@ -68,19 +47,13 @@ module.exports = class Collection
         {
             this.cmds.push(async () =>
             {
-                let ret = this._filter(cond, option)
+                let cursor = this._query(cond, option)
 
-                let projection = make_projection(option.projection)
+                let ret = null
 
-                ret = ret.map(projection)
-
-                if (ret.length > 0)
+                if (cursor.hasNext())
                 {
-                    ret = ret[0]
-                }
-                else
-                {
-                    ret = null
+                    ret = cursor.next()
                 }
 
                 resolve(ret)
@@ -101,17 +74,17 @@ module.exports = class Collection
         {
             this.cmds.push(async () =>
             {
-                let updator = make_updator(operation)
+                let cursor = this._query(cond, option)
 
-                let result = this._filter(cond, option)
+                cursor.projection = make_updator(operation)     //修改project
 
-                if (result.length > 0)
+                if (cursor.hasNext())
                 {
-                    updator(result[0])
+                    cursor.next()
                 }
                 else if (option.upsert == true)
                 {
-                    let row = updator()
+                    let row = cursor.projection
 
                     row._id = row._id || genid()
 
@@ -122,7 +95,6 @@ module.exports = class Collection
             })
 
             this.do()
-
         })
     }
 
@@ -130,24 +102,13 @@ module.exports = class Collection
     {
         this.cmds.push(async () =>
         {
-            let updator = make_updator(operation)
+            let cursor = this._query(cond, option)
 
-            let result = this._filter(cond, option)
+            cursor.projection = make_updator(operation)     //修改project
 
-            if (result.length > 0)
+            while (cursor.hasNext())
             {
-                for (let one of result)
-                {
-                    updator(one)
-                }
-            }
-            else if (option.upsert == true)
-            {
-                let row = updator()
-
-                row._id = row._id || genid()
-
-                this.data[row._id] = row
+                cursor.next()
             }
 
             resolve()
@@ -162,9 +123,9 @@ module.exports = class Collection
         {
             this.cmds.push(async () =>
             {
-                let result = this._filter(cond, filter)
+                let cursor = this._query(cond)
 
-                for (let one of result)
+                for (let one of cursor.data)
                 {
                     delete this.data[one._id]
                     break
@@ -183,12 +144,11 @@ module.exports = class Collection
         {
             this.cmds.push(async () =>
             {
-                let result = this._filter(cond, filter)
+                let cursor = this._query(cond)
 
-                for (let one of result)
+                for (let one of cursor.data)
                 {
                     delete this.data[one._id]
-
                 }
 
                 resolve()
@@ -216,7 +176,16 @@ module.exports = class Collection
         this.doing = false
     }
 
-    async load()
+    _query(cond, option)
+    {
+        const cursor = new Cursor(cond, option)
+
+        cursor.travel(this.data)
+
+        return cursor
+    }
+
+    async _load()
     {
         try
         {
@@ -230,30 +199,8 @@ module.exports = class Collection
         }
     }
 
-    _filter(cond, option)
+    _save()
     {
-        let filter = make_filter(cond)
-        let sorter = make_sorter(option.sort)
 
-        let ret = []
-
-        for (let _id in this.data)
-        {
-            let one = this.data[_id]
-
-            if (filter(one) == true)
-            {
-                ret.push(one)
-            }
-        }
-
-        ret.sort(sorter)
-
-        if (option.limit)
-        {
-            ret = ret.slice(0, option.limit)
-        }
-
-        return ret
     }
 }
