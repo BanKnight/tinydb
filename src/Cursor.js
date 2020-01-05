@@ -1,4 +1,4 @@
-const make_filter = require("./make_filter")
+const make_filter = require("./utils/make_filter")
 const make_projection = require("./utils/make_projection")
 const make_sorter = require("./utils/make_sorter")
 
@@ -31,9 +31,9 @@ module.exports = class Cursor
 
         this.data.sort(this.sorter)
 
-        if (this.option.limit)
+        if (this.option.limit && this.data.length > this.option.limit)
         {
-            this.data = this.data.slice(0, option.limit)
+            this.data = this.data.slice(0, this.option.limit)
         }
     }
 

@@ -11,13 +11,12 @@ module.exports = class Client
     constructor(connect_str, option)
     {
         this.option = option
-        this.root = "".substr(7)
+        this.root = path.resolve(connect_str.substr(10))
         this.dbs = {}
     }
 
     async connect()
     {
-
         if (await fs.exists(this.root) == false)
         {
             await fs.mkdirp(this.root)

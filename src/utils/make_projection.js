@@ -2,6 +2,11 @@ const extend = require("extend2")
 
 module.exports = function (option)
 {
+    if (option == null)
+    {
+        return _default
+    }
+
     let black_mode = false
 
     for (let key in option)
@@ -9,7 +14,7 @@ module.exports = function (option)
         let val = option[key]
         if (val == 0)            //option 是黑名单
         {
-            black = true
+            black_mode = true
         }
         break
     }
@@ -41,4 +46,9 @@ module.exports = function (option)
 
         return extend(true, {}, data)       //深拷贝
     }
+}
+
+function _default(target)
+{
+    return extend(true, {}, target)
 }

@@ -49,14 +49,9 @@ let directives = {}
 
 directives["$set"] = (data) =>
 {
-
     return (target) =>
     {
-        target = target || {}
-
-        target = extend(true, target, data)
-
-        return target
+        extend(true, target, data)
     }
 }
 
@@ -89,10 +84,6 @@ directives["$inc"] = (data) =>
 
     return (target) =>
     {
-        target = target || {}
-
         travel(target, data)
-
-        return target
     }
 }

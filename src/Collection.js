@@ -2,12 +2,8 @@ const fs = require("fs-extra")
 const path = require("path")
 const genid = require("shortid").generate
 
-const make_updator = require("./make_updator")
-const make_filter = require("./make_filter")
-const make_projection = require("./utils/make_projection")
-const make_sorter = require("./utils/make_sorter")
-
-const empty = {}
+const Cursor = require("./Cursor")
+const make_updator = require("./utils/make_updator")
 
 module.exports = class Collection
 {
@@ -18,7 +14,7 @@ module.exports = class Collection
         this.path = path.join(this.db.root, this.name)
 
         this.meta = {}
-        this.data = []
+        this.data = {}      //[_id] = row
         this.cmds = [this._load.bind(this)]
 
         this.doing = false
@@ -41,6 +37,7 @@ module.exports = class Collection
 
     async findOne(cond, option)
     {
+        option = option || {}
         option.limit = 1
 
         return new Promise((resolve, reject) =>
@@ -84,9 +81,14 @@ module.exports = class Collection
                 }
                 else if (option.upsert == true)
                 {
-                    let row = cursor.projection
+                    let row = cursor.projection()
 
-                    row._id = row._id || genid()
+                    row._id = row._id || cond._id
+
+                    if (row._id == null || typeof (row._id) == "object")
+                    {
+                        row._id = genid()
+                    }
 
                     this.data[row._id] = row
                 }
