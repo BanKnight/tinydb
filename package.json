@@ -1,6 +1,6 @@
 {
   "name": "@bansky/tinydb",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "json file database",
   "main": "index.js",
   "scripts": {

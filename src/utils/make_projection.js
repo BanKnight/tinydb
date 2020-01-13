@@ -1,12 +1,13 @@
 const extend = require("extend2")
 
-module.exports = function (option)
+module.exports = function(option)
 {
     if (option == null)
     {
         return _default
     }
 
+    let is_empty = true
     let black_mode = false
 
     for (let key in option)
@@ -16,7 +17,13 @@ module.exports = function (option)
         {
             black_mode = true
         }
+        is_empty = false
         break
+    }
+
+    if (is_empty)
+    {
+        return _default
     }
 
     if (black_mode)
