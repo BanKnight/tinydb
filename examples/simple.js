@@ -2,7 +2,7 @@ const tinnydb = require("../index")
 
 async function main()
 {
-    const client = await tinnydb.connect("tinnydb://./database")
+    const client = await tinnydb.connect("tinydb://./database")
 
     const db = client.db("project")
 
