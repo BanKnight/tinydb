@@ -5,7 +5,7 @@ const extend = require("extend2")
  * $set:{level:1}
  * $inc:{level:1}
  */
-module.exports = function (operation)
+module.exports = function(operation)
 {
     let updators = []
 
@@ -36,7 +36,7 @@ module.exports = function (operation)
 
 function compose(arr)
 {
-    return function (...args)
+    return function(...args)
     {
         for (let func of arr)
         {
@@ -66,7 +66,7 @@ directives["$inc"] = (data) =>
 
             let old = to[name]
 
-            if (tp != "number")
+            if (tp == "number")
             {
                 old = old != null ? old : 0
                 to[name] = old + val

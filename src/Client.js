@@ -17,7 +17,7 @@ module.exports = class Client
 
     async connect()
     {
-        if (await fs.exists(this.root) == false)
+        if (fs.existsSync(this.root) == false)
         {
             await fs.mkdirp(this.root)
         }

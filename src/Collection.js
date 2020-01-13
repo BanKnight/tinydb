@@ -5,13 +5,15 @@ const genid = require("shortid").generate
 const Cursor = require("./Cursor")
 const make_updator = require("./utils/make_updator")
 
+const empty = {}
+
 module.exports = class Collection
 {
     constructor(db, name)
     {
         this.db = db
         this.name = name
-        this.path = path.join(this.db.root, this.name)
+        this.path = path.join(this.db.path, `${this.name}.json`)
 
         this.meta = {}
         this.data = {}      //[_id] = row
@@ -67,6 +69,8 @@ module.exports = class Collection
 
     async updateOne(cond, operation, option)
     {
+        option = option || empty
+
         return new Promise((resolve, reject) =>
         {
             this.cmds.push(async () =>
@@ -93,7 +97,11 @@ module.exports = class Collection
                     this.data[row._id] = row
                 }
 
+                this._save()
+
                 resolve()
+
+                return true
             })
 
             this.do()
@@ -102,7 +110,7 @@ module.exports = class Collection
 
     async updateMany(cond, operation, option)
     {
-        this.cmds.push(async () =>
+        this.cmds.push(async (resolve) =>
         {
             let cursor = this._query(cond, option)
 
@@ -114,6 +122,8 @@ module.exports = class Collection
             }
 
             resolve()
+
+            return true
         })
 
         this.do()
@@ -132,8 +142,10 @@ module.exports = class Collection
                     delete this.data[one._id]
                     break
                 }
-
                 resolve()
+
+                return true
+
             })
 
             this.do()
@@ -154,6 +166,8 @@ module.exports = class Collection
                 }
 
                 resolve()
+
+                return true
             })
 
             this.do()
@@ -168,11 +182,21 @@ module.exports = class Collection
         }
         this.doing = true
 
+        let need_save = false
+
         while (this.cmds.length > 0)
         {
             let cmd = this.cmds.shift()
 
-            await cmd()
+            if (await cmd() == true)
+            {
+                need_save = true
+            }
+        }
+
+        if (need_save)
+        {
+            this._save()
         }
 
         this.doing = false
@@ -180,6 +204,8 @@ module.exports = class Collection
 
     _query(cond, option)
     {
+        option = option || empty
+
         const cursor = new Cursor(cond, option)
 
         cursor.travel(this.data)
@@ -191,9 +217,10 @@ module.exports = class Collection
     {
         try
         {
-            const content = await fs.readJSON(this.path)
+            const collection = await fs.readJSON(this.path)
 
-            this.content = content
+            this.meta = collection.meta
+            this.data = collection.data
         }
         catch (e)
         {
@@ -203,6 +230,8 @@ module.exports = class Collection
 
     _save()
     {
+        let content = { meta: this.meta, data: this.data }
 
+        fs.writeJSONSync(this.path, content)
     }
 }
