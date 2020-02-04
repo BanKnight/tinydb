@@ -1,4 +1,4 @@
-module.exports = function (cond)
+module.exports = function(cond)
 {
     let filters = []
 
@@ -15,7 +15,7 @@ module.exports = function (cond)
 
 function compose(arr)
 {
-    return function (...args)
+    return function(...args)
     {
         for (let func of arr)
         {
@@ -37,7 +37,7 @@ function make_key_filter(key, val)
     let filters = []
     if (typeof (val) == "object")       //里面的key 必然都是$开头
     {
-        for (let cmd of val)
+        for (let cmd in val)
         {
             let filter = directives[cmd](key, val[cmd])
 
@@ -46,7 +46,7 @@ function make_key_filter(key, val)
     }
     else
     {
-        filter = directives["$="](key, val)
+        let filter = directives["$="](key, val)
 
         filters.push(filter)
     }
